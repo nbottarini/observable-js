@@ -1,0 +1,26 @@
+### node.js ###
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+
+### Linux ###
+*~
+.Trash-*
+
+### macOS ###
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+[Dd]esktop.ini
+
+### Intellij ###
+out/
+*.ipr
+.idea/
+
+### Other ###
+.cache
+.env
+/stats.html
