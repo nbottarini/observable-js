@@ -4,6 +4,10 @@ npm-debug.log
 yarn-error.log
 dist/
 
+### Jest ###
+.jest/
+coverage/
+
 ### Linux ###
 *~
 .Trash-*
