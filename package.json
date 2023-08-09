@@ -1,10 +1,12 @@
 {
   "name": "@nbottarini/observable",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Tiny Observable pattern implementation for creating observable properties",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
+  "browser": "dist/esm/index.js",
   "types": "dist/types/index.d.ts",
+  "react-native": "dist/esm/index.js",
   "author": "Nicolás Bottarini <nicolasbottarini@gmail.com>",
   "license": "MIT",
   "homepage": "https://github.com/nbottarini/observable-js#readme",
