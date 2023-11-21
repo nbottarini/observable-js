@@ -1,4 +1,4 @@
-export type ObserverFunc<T> = (subject: T) => void
+export type ObserverFunc<T> = (subject: T) => any
 
 export class Observable<T = void> {
     private observers: Set<object> = new Set()
@@ -19,10 +19,11 @@ export class Observable<T = void> {
         this.handlers.clear()
     }
 
-    notify(value?: T) {
+    async notify(value?: T) {
+        let promises = []
         for (const handler of this.handlers.values()) {
-            // @ts-ignore
-            handler(value)
+            promises.push(handler(value))
         }
+        await Promise.all(promises)
     }
 }

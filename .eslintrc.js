@@ -6,6 +6,7 @@ module.exports = {
   env: {
     es6: true,
     jest: true,
+    node: true,
   },
   globals: {
     module: false,
