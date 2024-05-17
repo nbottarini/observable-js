@@ -47,3 +47,12 @@ export class View2 {
     }
 }
 ```
+
+**Observable properties:**
+
+```typescript
+const nameProperty = new ObservableProperty('John')
+nameProperty.changed.subscribe(this, this.onNameChanged)
+
+nameProperty.value = 'new name'
+```
