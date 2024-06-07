@@ -93,12 +93,20 @@ it('notifies to multiple async observers', async () => {
     expect(receivedEvents).toContainEqual({ elementId: 2, observer: 'observer2' })
 })
 
+it('hasObserver', () => {
+    const observer = {
+        onClick: () => {}
+    }
+    observable.subscribe(observer, observer.onClick)
+
+    expect(observable.hasObserver(observer)).toBeTrue()
+})
+
 beforeEach(() => {
     observable = new Observable<ClickEvent>()
 })
 
 let observable: Observable<ClickEvent>
-
 
 interface ClickEvent {
     elementId: number

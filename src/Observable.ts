@@ -9,6 +9,10 @@ export class Observable<T = void> {
         this.handlers.set(observer, handler.bind(observer))
     }
 
+    hasObserver(observer: object) {
+        return this.observers.has(observer)
+    }
+
     unsubscribe(observer: object) {
         this.observers.delete(observer)
         this.handlers.delete(observer)
