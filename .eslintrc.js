@@ -17,12 +17,8 @@ module.exports = {
     'curly': ['error', 'multi-line'],
     'object-curly-spacing': [ 'error', 'always' ],
     'dot-notation': 'off',
+    'no-unused-vars': 'off',
     '@typescript-eslint/semi': ['error', 'never'],
-    '@typescript-eslint/no-unused-vars': [
-      'warn', {
-        'vars': 'all',
-        'args': 'none',
-        'ignoreRestSiblings': false,
-      }],
+    '@typescript-eslint/no-unused-vars': 'off',
   },
 }

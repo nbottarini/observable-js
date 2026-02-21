@@ -1,4 +1,4 @@
-import { Observable } from '../src'
+import { DefaultObservable } from '../src'
 
 it('notifies to subscribed observer', () => {
     let receivedEvents = []
@@ -103,10 +103,10 @@ it('hasObserver', () => {
 })
 
 beforeEach(() => {
-    observable = new Observable<ClickEvent>()
+    observable = new DefaultObservable<ClickEvent>()
 })
 
-let observable: Observable<ClickEvent>
+let observable: DefaultObservable<ClickEvent>
 
 interface ClickEvent {
     elementId: number

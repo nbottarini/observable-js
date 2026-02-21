@@ -18,11 +18,13 @@ $ yarn add @nbottarini/observable
 
 ## Usage
 
+### Observables
+
 **View1.ts:**
 ```typescript
 export class View1 {
-    public readonly buttonClicked = new Observable<ClickEvent>()
-    public readonly textChanged = new Observable<TextChangedEvent>()
+    public readonly buttonClicked = observable<ClickEvent>()
+    public readonly textChanged = observable<TextChangedEvent>()
     
     // Do something internally to handle UI events 
     
@@ -48,11 +50,36 @@ export class View2 {
 }
 ```
 
-**Observable properties:**
+### Composite observables
 
 ```typescript
-const nameProperty = new ObservableProperty('John')
-nameProperty.changed.subscribe(this, this.onNameChanged)
+const buttonClicked = observable<ClickEvent>()
+const textChanged = observable<TextChangedEvent>()
+const allEvents = compositeObservable(buttonClicked, textChanged)
 
-nameProperty.value = 'new name'
+allEvents.subscribe({}, (event) => {
+    // Notifies click and text changed events
+})
+```
+
+### Observable properties:
+
+```typescript
+const nameProperty$ = property('John')
+nameProperty$.value // 'John' 
+
+nameProperty$.changed.subscribe(this, this.onNameChanged)
+nameProperty$.value = 'new name' // Notifies changes to subscribers
+```
+
+### Computed properties:
+```typescript
+const property1 = property(1)
+const property2$ = property(2)
+const computedProperty$ = computed((value1, value2) => value1 + value2, $property1, $property2)
+computedProperty$.value // returns 3 
+
+computedProperty$.changed.subscribe(this, this.onComputedChanged)
+property1$.value = 3 // Notifies new computed value 5 to computedProperty$ subscribers
+
 ```

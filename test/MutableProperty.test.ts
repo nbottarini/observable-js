@@ -1,13 +1,13 @@
-import { ObservableProperty } from '../src/ObservableProperty'
+import { MutableProperty } from '../src/MutableProperty'
 
 it('initial value', () => {
-    const property = new ObservableProperty('initial')
+    const property = new MutableProperty('initial')
 
     expect(property.value).toEqual('initial')
 })
 
 it('set value', () => {
-    const property = new ObservableProperty('initial')
+    const property = new MutableProperty('initial')
 
     property.value = 'new value'
 
@@ -15,7 +15,7 @@ it('set value', () => {
 })
 
 it('notify observers on value change', () => {
-    const property = new ObservableProperty('initial')
+    const property = new MutableProperty('initial')
     let observerNotifiedValue = ''
     property.changed.subscribe({}, (value) => observerNotifiedValue = value)
 
@@ -25,7 +25,7 @@ it('notify observers on value change', () => {
 })
 
 it('don\'t notify observers when new value is equal to previous value', () => {
-    const property = new ObservableProperty('initial')
+    const property = new MutableProperty('initial')
     property.value = 'new value'
     let observerNotifiedValue = ''
     property.changed.subscribe({}, (value) => observerNotifiedValue = value)
