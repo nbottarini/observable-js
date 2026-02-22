@@ -62,21 +62,21 @@ allEvents.subscribe({}, (event) => {
 })
 ```
 
-### Observable properties:
+### Observable values:
 
 ```typescript
-const nameProperty$ = property('John')
+const nameProperty$ = observableValue('John')
 nameProperty$.value // 'John' 
 
 nameProperty$.changed.subscribe(this, this.onNameChanged)
 nameProperty$.value = 'new name' // Notifies changes to subscribers
 ```
 
-### Computed properties:
+### Observable computed values:
 ```typescript
-const property1 = property(1)
-const property2$ = property(2)
-const computedProperty$ = computed((value1, value2) => value1 + value2, $property1, $property2)
+const property1 = observableValue(1)
+const property2$ = observableValue(2)
+const computedProperty$ = observableComputed((value1, value2) => value1 + value2, $property1, $property2)
 computedProperty$.value // returns 3 
 
 computedProperty$.changed.subscribe(this, this.onComputedChanged)

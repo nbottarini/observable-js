@@ -1,11 +1,11 @@
-import { ObservableProperty } from './ObservableProperty'
+import { ObservableValue } from './ObservableValue'
 import { Observable, ObserverFunc } from './Observable'
 import { compositeObservable } from './CompositeObservable'
 import { observable } from './DefaultObservable'
 
-type ValueOf<P> = P extends ObservableProperty<infer T> ? T : never
+type ValueOf<P> = P extends ObservableValue<infer T> ? T : never
 
-export class ComputedProperty<Deps extends readonly ObservableProperty<any>[], T> implements ObservableProperty<T> {
+export class ObservableComputedValue<Deps extends readonly ObservableValue<any>[], T> implements ObservableValue<T> {
     private readonly internalChanged = observable<T>()
     readonly changed: Observable<T> = {
         subscribe: (o, h) => this.subscribe(o, h),
@@ -88,9 +88,9 @@ export class ComputedProperty<Deps extends readonly ObservableProperty<any>[], T
     }
 }
 
-export function computed<
-    Deps extends readonly ObservableProperty<any>[],
+export function observableComputed<
+    Deps extends readonly ObservableValue<any>[],
     T,
 >(computeFunc: (...values: { [K in keyof Deps]: ValueOf<Deps[K]> }) => T, ...deps: Deps) {
-    return new ComputedProperty(computeFunc, ...deps)
+    return new ObservableComputedValue(computeFunc, ...deps)
 }

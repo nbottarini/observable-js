@@ -1,8 +1,8 @@
 import { observable } from './DefaultObservable'
 import { ObserverFunc } from './Observable'
-import { ObservableProperty } from './ObservableProperty'
+import { ObservableValue } from './ObservableValue'
 
-export class MutableProperty<T> implements ObservableProperty<T> {
+export class ObservableMutableValue<T> implements ObservableValue<T> {
     private _value: T
     readonly changed = observable<T>()
 
@@ -38,6 +38,6 @@ export class MutableProperty<T> implements ObservableProperty<T> {
     }
 }
 
-export function property<T>(initialValue: T): MutableProperty<T> {
-    return new MutableProperty<T>(initialValue)
+export function observableValue<T>(initialValue: T): ObservableMutableValue<T> {
+    return new ObservableMutableValue<T>(initialValue)
 }

@@ -1,10 +1,10 @@
-import { property } from '../src/MutableProperty'
-import { ComputedProperty } from '../src/ComputedProperty'
+import { observableValue } from '../src/ObservableMutableValue'
+import { ObservableComputedValue } from '../src/ObservableComputedValue'
 
 it('initial value is computed value', () => {
-    const property1$ = property(1)
-    const property2$ = property(2)
-    const computed = new ComputedProperty((property1, property2) => {
+    const property1$ = observableValue(1)
+    const property2$ = observableValue(2)
+    const computed = new ObservableComputedValue((property1, property2) => {
         return property1 + property2
     }, property1$, property2$)
 
@@ -12,9 +12,9 @@ it('initial value is computed value', () => {
 })
 
 it('when dependent property changes value reflects new computed value', () => {
-    const property1$ = property(1)
-    const property2$ = property(2)
-    const computed = new ComputedProperty((property1, property2) => {
+    const property1$ = observableValue(1)
+    const property2$ = observableValue(2)
+    const computed = new ObservableComputedValue((property1, property2) => {
         return property1 + property2
     }, property1$, property2$)
 
@@ -24,9 +24,9 @@ it('when dependent property changes value reflects new computed value', () => {
 })
 
 it('notify observers when dependent value changes', () => {
-    const property$ = property('initial')
+    const property$ = observableValue('initial')
     let observerNotifiedValue = ''
-    const computed = new ComputedProperty((prop) => prop, property$)
+    const computed = new ObservableComputedValue((prop) => prop, property$)
     computed.changed.subscribe({}, (value) => observerNotifiedValue = value)
 
     property$.value = 'new value'
@@ -35,10 +35,10 @@ it('notify observers when dependent value changes', () => {
 })
 
 it('when not observed, value recomputes on every read', () => {
-    const property1$ = property(1)
-    const property2$ = property(2)
+    const property1$ = observableValue(1)
+    const property2$ = observableValue(2)
     let computeCalls = 0
-    const computed = new ComputedProperty((a, b) => {
+    const computed = new ObservableComputedValue((a, b) => {
         computeCalls++
         return a + b
     }, property1$, property2$)
@@ -52,10 +52,10 @@ it('when not observed, value recomputes on every read', () => {
 })
 
 it('when observed, value is cached and updated', () => {
-    const property1$ = property(1)
-    const property2$ = property(2)
+    const property1$ = observableValue(1)
+    const property2$ = observableValue(2)
     let computeCalls = 0
-    const computed = new ComputedProperty((a, b) => {
+    const computed = new ObservableComputedValue((a, b) => {
         computeCalls++
         return a + b
     }, property1$, property2$)
@@ -70,10 +70,10 @@ it('when observed, value is cached and updated', () => {
 })
 
 it('recomputes value when dependencies change', async () => {
-    const property1$ = property(1)
-    const property2$ = property(2)
+    const property1$ = observableValue(1)
+    const property2$ = observableValue(2)
     let computeCalls = 0
-    const computed = new ComputedProperty((a, b) => {
+    const computed = new ObservableComputedValue((a, b) => {
         computeCalls++
         return a + b
     }, property1$, property2$)
@@ -87,9 +87,9 @@ it('recomputes value when dependencies change', async () => {
 })
 
 it('notifies multiple observers', () => {
-    const property$ = property('initial')
+    const property$ = observableValue('initial')
     const received: string[] = []
-    const computed = new ComputedProperty((v) => v, property$)
+    const computed = new ObservableComputedValue((v) => v, property$)
     const o1 = {}
     const o2 = {}
     computed.changed.subscribe(o1, (v) => received.push(`o1:${v}`))
@@ -101,9 +101,9 @@ it('notifies multiple observers', () => {
 })
 
 it('unsubscribe stops notifications for that observer only', () => {
-    const property$ = property('initial')
+    const property$ = observableValue('initial')
     const received: string[] = []
-    const computed = new ComputedProperty((v) => v, property$)
+    const computed = new ObservableComputedValue((v) => v, property$)
     const o1 = {}
     const o2 = {}
     computed.changed.subscribe(o1, (v) => received.push(`o1:${v}`))
@@ -116,8 +116,8 @@ it('unsubscribe stops notifications for that observer only', () => {
 })
 
 it('unsubscribeAll stops all notifications', () => {
-    const property$ = property('initial')
-    const computed = new ComputedProperty((v) => v, property$)
+    const property$ = observableValue('initial')
+    const computed = new ObservableComputedValue((v) => v, property$)
     let notified = ''
     computed.changed.subscribe({}, (v) => { notified = v })
     computed.changed.unsubscribeAll()
