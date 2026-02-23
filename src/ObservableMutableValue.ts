@@ -1,6 +1,7 @@
 import { observable } from './DefaultObservable'
 import { ObserverFunc } from './Observable'
 import { ObservableValue } from './ObservableValue'
+import { observableComputed } from './ObservableComputedValue'
 
 export class ObservableMutableValue<T> implements ObservableValue<T> {
     private _value: T
@@ -35,6 +36,10 @@ export class ObservableMutableValue<T> implements ObservableValue<T> {
         if (this._value === newValue) return
         this._value = newValue
         this.changed.notify(this._value)
+    }
+
+    map<S>(mapper: (v:T) => S): ObservableValue<S> {
+        return observableComputed(mapper, this)
     }
 }
 

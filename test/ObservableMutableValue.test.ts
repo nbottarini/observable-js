@@ -34,3 +34,13 @@ it('don\'t notify observers when new value is equal to previous value', () => {
 
     expect(observerNotifiedValue).toEqual('')
 })
+
+
+it('map returns a new observable computed value with mapped function as compute function', () => {
+    const value$ = new ObservableMutableValue(1)
+    const mapped$ = value$.map(it => it * 10)
+
+    value$.value = 5
+
+    expect(mapped$.value).toEqual(50)
+})

@@ -86,6 +86,10 @@ export class ObservableComputedValue<Deps extends readonly ObservableValue<any>[
             this.internalChanged.notify(this.cachedValue)
         }
     }
+
+    map<S>(mapper: (v:T) => S): ObservableValue<S> {
+        return observableComputed(mapper, this)
+    }
 }
 
 export function observableComputed<

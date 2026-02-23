@@ -1,4 +1,4 @@
-import { observableValue } from '../src/ObservableMutableValue'
+import { ObservableMutableValue, observableValue } from '../src/ObservableMutableValue'
 import { ObservableComputedValue } from '../src/ObservableComputedValue'
 
 it('initial value is computed value', () => {
@@ -125,4 +125,14 @@ it('unsubscribeAll stops all notifications', () => {
     property$.value = 'new'
 
     expect(notified).toEqual('')
+})
+
+it('map returns a new observable computed value with mapped function as compute function', () => {
+    const value$ = new ObservableMutableValue(1)
+    const mapped1$ = value$.map(it => it * 10)
+    const mapped2$ = mapped1$.map(it => it + 5)
+
+    value$.value = 5
+
+    expect(mapped2$.value).toEqual(55)
 })
