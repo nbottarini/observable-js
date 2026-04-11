@@ -47,14 +47,20 @@ export class ObservableComputedValue<Deps extends readonly ObservableValue<any>[
         this.internalChanged.unsubscribe(observer)
         this.observerCount--
 
-        if (this.observerCount === 0) this.depsChanged.unsubscribe(this)
+        if (this.observerCount === 0) {
+            this.depsChanged.unsubscribe(this)
+            this.invalidateCache()
+        }
     }
 
     unsubscribeAll() {
         const hadObservers = this.observerCount > 0
         this.internalChanged.unsubscribeAll()
         this.observerCount = 0
-        if (hadObservers) this.depsChanged.unsubscribe(this)
+        if (hadObservers) {
+            this.depsChanged.unsubscribe(this)
+            this.invalidateCache()
+        }
     }
 
     async notify(value?: any): Promise<void> {
@@ -85,6 +91,11 @@ export class ObservableComputedValue<Deps extends readonly ObservableValue<any>[
             this.hasValue = true
             this.internalChanged.notify(this.cachedValue)
         }
+    }
+
+    private invalidateCache() {
+        this.hasValue = false
+        this.cachedValue = undefined as T
     }
 
     map<S>(mapper: (v:T) => S): ObservableValue<S> {

@@ -115,6 +115,21 @@ it('unsubscribe stops notifications for that observer only', () => {
     expect(received).toEqual(['o2:new'])
 })
 
+it('invalidates cached value when the last observer unsubscribes', () => {
+    const property$ = observableValue<number | undefined>(undefined)
+    const computed = new ObservableComputedValue((v) => v, property$)
+    const observer = {}
+
+    computed.changed.subscribe(observer, () => {})
+    expect(computed.value).toBeUndefined()
+
+    computed.changed.unsubscribe(observer)
+    property$.value = 3
+    computed.changed.subscribe(observer, () => {})
+
+    expect(computed.value).toEqual(3)
+})
+
 it('unsubscribeAll stops all notifications', () => {
     const property$ = observableValue('initial')
     const computed = new ObservableComputedValue((v) => v, property$)
@@ -125,6 +140,20 @@ it('unsubscribeAll stops all notifications', () => {
     property$.value = 'new'
 
     expect(notified).toEqual('')
+})
+
+it('invalidates cached value when unsubscribeAll removes the last observer', () => {
+    const property$ = observableValue<number | undefined>(undefined)
+    const computed = new ObservableComputedValue((v) => v, property$)
+
+    computed.changed.subscribe({}, () => {})
+    expect(computed.value).toBeUndefined()
+
+    computed.changed.unsubscribeAll()
+    property$.value = 3
+    computed.changed.subscribe({}, () => {})
+
+    expect(computed.value).toEqual(3)
 })
 
 it('map returns a new observable computed value with mapped function as compute function', () => {
