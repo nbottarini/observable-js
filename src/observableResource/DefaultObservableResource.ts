@@ -1,5 +1,5 @@
 import { MutableObservableValue, ObservableValue } from '../observableValue/ObservableValue'
-import { observableValue } from '../observableValue/ObservableMutableValue'
+import { observableValue } from '../observableValue/DefaultObservableValue'
 import { ObservableResource, ResourceOptions, ResourceStatus } from './ObservableResource'
 import { DerivedObservableResource } from './DerivedObservableResource'
 

@@ -14,7 +14,7 @@ type DepValues<Deps extends readonly ObservableValue<any>[]> = { [K in keyof Dep
  * its own. While observed, the computed value is cached; without observers,
  * the cache is invalidated and `.value` recomputes on every read.
  */
-export class ObservableComputedValue<Deps extends readonly ObservableValue<any>[], T> implements ObservableValue<T> {
+export class ComputedObservableValue<Deps extends readonly ObservableValue<any>[], T> implements ObservableValue<T> {
     private registry: ObserverRegistry<T> = new ObserverRegistry()
     private readonly deps: Deps
     private readonly onDepChangedRef = this.onDepChanged.bind(this)
@@ -68,7 +68,7 @@ export class ObservableComputedValue<Deps extends readonly ObservableValue<any>[
     }
 
     map<U>(mapper: (value: T) => U): ObservableValue<U> {
-        return new ObservableComputedValue<readonly [ObservableValue<T>], U>(mapper, this)
+        return new ComputedObservableValue<readonly [ObservableValue<T>], U>(mapper, this)
     }
 
     private attachToDeps() {
@@ -111,5 +111,5 @@ export function observableComputed<Deps extends readonly ObservableValue<any>[],
     computeFunc: (...values: DepValues<Deps>) => T,
     ...deps: Deps
 ): ObservableValue<T> {
-    return new ObservableComputedValue<Deps, T>(computeFunc, ...deps)
+    return new ComputedObservableValue<Deps, T>(computeFunc, ...deps)
 }

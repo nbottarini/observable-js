@@ -1,14 +1,14 @@
 import { MutableObservableValue, ObservableValue } from './ObservableValue'
 import { ObserverFunc } from '../common/ObserverFunc'
 import { ObserverRegistry } from '../common/ObserverRegistry'
-import { observableComputed } from './ObservableComputedValue'
+import { observableComputed } from './ComputedObservableValue'
 
 /**
  * Default implementation of {@link MutableObservableValue}. Holds a value and
  * notifies observers whenever it is reassigned to a different value (compared
  * with `Object.is`); reassigning to the same value is a no-op.
  */
-export class ObservableMutableValue<T> implements MutableObservableValue<T> {
+export class DefaultObservableValue<T> implements MutableObservableValue<T> {
     private registry: ObserverRegistry<T> = new ObserverRegistry()
     private _value: T
 
@@ -53,5 +53,5 @@ export class ObservableMutableValue<T> implements MutableObservableValue<T> {
  * read-only from the outside.
  */
 export function observableValue<T>(initialValue: T): MutableObservableValue<T> {
-    return new ObservableMutableValue<T>(initialValue)
+    return new DefaultObservableValue<T>(initialValue)
 }
