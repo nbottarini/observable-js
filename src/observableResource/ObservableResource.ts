@@ -9,7 +9,7 @@ import { ObservableValue } from '../observableValue/ObservableValue'
  *
  * Note that subsequent refreshes do NOT move `status` back to `loading`. Once
  * data is available, `status` stays `ready` while a background fetch is in
- * flight; use {@link ObservableResource.isRefreshing} to detect it. This is
+ * flight; use {@link ObservableResource.isRefreshing$} to detect it. This is
  * the stale-while-revalidate pattern: the UI keeps showing the cached value
  * instead of flickering.
  */
@@ -28,12 +28,23 @@ export type ResourceStatus = 'uninitialized' | 'loading' | 'ready' | 'error'
  * `isRefreshing` flips to `true` while the new fetch is in flight. If a
  * background refresh fails, `error` is populated but `status` remains `ready`
  * and the cached data stays available.
+ *
+ * Each piece of state is exposed twice: a `$`-suffixed reactive view
+ * ({@link ObservableValue}) for subscribing or chaining, and a plain
+ * synchronous getter for reading the current value. They always match —
+ * `resource.data === resource.data$.value`.
  */
 export interface ObservableResource<T> {
-    readonly data: ObservableValue<T | undefined>
-    readonly status: ObservableValue<ResourceStatus>
-    readonly error: ObservableValue<Error | null>
-    readonly isRefreshing: ObservableValue<boolean>
+    readonly data$: ObservableValue<T | undefined>
+    readonly status$: ObservableValue<ResourceStatus>
+    readonly error$: ObservableValue<Error | null>
+    readonly isRefreshing$: ObservableValue<boolean>
+
+    readonly data: T | undefined
+    readonly status: ResourceStatus
+    readonly error: Error | null
+    readonly isRefreshing: boolean
+
     whenReady(): Promise<T>
     refresh(): Promise<void>
     reset(): void

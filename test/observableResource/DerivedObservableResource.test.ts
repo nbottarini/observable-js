@@ -6,14 +6,14 @@ it('exposes the mapped data when the source resolves', async () => {
 
     await source.whenReady()
 
-    expect(derived.data.value).toEqual('Jorge')
+    expect(derived.data).toEqual('Jorge')
 })
 
 it('reflects undefined data while the source is not ready', () => {
     const source = observableResource(async () => ({ name: 'Jorge' }))
     const derived = source.map(p => p?.name)
 
-    expect(derived.data.value).toBeUndefined()
+    expect(derived.data).toBeUndefined()
 })
 
 it('shares the source status', async () => {
@@ -22,8 +22,8 @@ it('shares the source status', async () => {
 
     await derived.whenReady()
 
-    expect(derived.status.value).toEqual('ready')
-    expect(derived.status).toBe(source.status)
+    expect(derived.status).toEqual('ready')
+    expect(derived.status$).toBe(source.status$)
 })
 
 it('shares the source error', async () => {
@@ -33,7 +33,7 @@ it('shares the source error', async () => {
 
     await expect(source.whenReady()).rejects.toThrow('boom')
 
-    expect(derived.error.value).toBe(error)
+    expect(derived.error).toBe(error)
 })
 
 it('shares the source isRefreshing flag', async () => {
@@ -44,7 +44,7 @@ it('shares the source isRefreshing flag', async () => {
     await firstLoad
     const derived = source.map(v => v?.toUpperCase())
     const refreshings: boolean[] = []
-    derived.isRefreshing.subscribe({}, (r) => refreshings.push(r))
+    derived.isRefreshing$.subscribe({}, (r) => refreshings.push(r))
 
     const refreshPromise = source.refresh()
     resolve('second')
@@ -74,7 +74,7 @@ it('refresh delegates to the source', async () => {
     await derived.refresh()
 
     expect(fetchCalls).toEqual(2)
-    expect(derived.data.value).toEqual('V2')
+    expect(derived.data).toEqual('V2')
 })
 
 it('reset is a no-op on a derived resource', async () => {
@@ -84,15 +84,15 @@ it('reset is a no-op on a derived resource', async () => {
 
     derived.reset()
 
-    expect(source.status.value).toEqual('ready')
-    expect(derived.data.value).toEqual('HELLO')
+    expect(source.status).toEqual('ready')
+    expect(derived.data).toEqual('HELLO')
 })
 
 it('notifies data observers when the source updates', async () => {
     const source = observableResource(async () => 'hello')
     const derived = source.map(v => v?.toUpperCase())
     const received: (string | undefined)[] = []
-    derived.data.subscribe({}, (v) => received.push(v))
+    derived.data$.subscribe({}, (v) => received.push(v))
 
     await derived.whenReady()
 
@@ -106,7 +106,7 @@ it('chains map across multiple levels', async () => {
 
     await exclaimed.whenReady()
 
-    expect(exclaimed.data.value).toEqual('HELLO!')
+    expect(exclaimed.data).toEqual('HELLO!')
 })
 
 it('multiple derived resources can share the same source', async () => {
@@ -116,6 +116,6 @@ it('multiple derived resources can share the same source', async () => {
 
     await source.whenReady()
 
-    expect(name$.data.value).toEqual('Jorge')
-    expect(age$.data.value).toEqual(30)
+    expect(name$.data).toEqual('Jorge')
+    expect(age$.data).toEqual(30)
 })

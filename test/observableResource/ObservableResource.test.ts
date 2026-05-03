@@ -3,10 +3,10 @@ import { observableResource } from '../../src'
 it('starts in uninitialized state with undefined data', () => {
     const resource = observableResource(async () => 'hello')
 
-    expect(resource.status.value).toEqual('uninitialized')
-    expect(resource.data.value).toBeUndefined()
-    expect(resource.error.value).toBeNull()
-    expect(resource.isRefreshing.value).toBeFalse()
+    expect(resource.status).toEqual('uninitialized')
+    expect(resource.data).toBeUndefined()
+    expect(resource.error).toBeNull()
+    expect(resource.isRefreshing).toBeFalse()
 })
 
 it('whenReady triggers the fetch and resolves with the value', async () => {
@@ -15,8 +15,8 @@ it('whenReady triggers the fetch and resolves with the value', async () => {
     const value = await resource.whenReady()
 
     expect(value).toEqual('hello')
-    expect(resource.data.value).toEqual('hello')
-    expect(resource.status.value).toEqual('ready')
+    expect(resource.data).toEqual('hello')
+    expect(resource.status).toEqual('ready')
 })
 
 it('transitions to loading while the first fetch is in flight', async () => {
@@ -24,7 +24,7 @@ it('transitions to loading while the first fetch is in flight', async () => {
     let resolve: (v: string) => void = () => {}
     const fetch = () => new Promise<string>(r => { resolve = r })
     const resource = observableResource(fetch)
-    resource.status.subscribe({}, (s) => statuses.push(s))
+    resource.status$.subscribe({}, (s) => statuses.push(s))
 
     const promise = resource.whenReady()
     resolve('hello')
@@ -38,8 +38,8 @@ it('transitions to error when the first fetch fails', async () => {
     const resource = observableResource<string>(async () => { throw error })
 
     await expect(resource.whenReady()).rejects.toThrow('boom')
-    expect(resource.status.value).toEqual('error')
-    expect(resource.error.value).toBe(error)
+    expect(resource.status).toEqual('error')
+    expect(resource.error).toBe(error)
 })
 
 it('does not refetch when data is fresh', async () => {
@@ -66,7 +66,7 @@ it('refresh forces a new fetch and updates data', async () => {
     await resource.refresh()
 
     expect(fetchCalls).toEqual(2)
-    expect(resource.data.value).toEqual('value-2')
+    expect(resource.data).toEqual('value-2')
 })
 
 it('keeps status ready and flips isRefreshing while refreshing existing data', async () => {
@@ -77,8 +77,8 @@ it('keeps status ready and flips isRefreshing while refreshing existing data', a
     await firstLoad
     const statuses: string[] = []
     const refreshings: boolean[] = []
-    resource.status.subscribe({}, (s) => statuses.push(s))
-    resource.isRefreshing.subscribe({}, (r) => refreshings.push(r))
+    resource.status$.subscribe({}, (s) => statuses.push(s))
+    resource.isRefreshing$.subscribe({}, (r) => refreshings.push(r))
 
     const refreshPromise = resource.refresh()
     resolve('second')
@@ -86,8 +86,8 @@ it('keeps status ready and flips isRefreshing while refreshing existing data', a
 
     expect(statuses).toEqual([])
     expect(refreshings).toEqual([true, false])
-    expect(resource.status.value).toEqual('ready')
-    expect(resource.data.value).toEqual('second')
+    expect(resource.status).toEqual('ready')
+    expect(resource.data).toEqual('second')
 })
 
 it('keeps cached data and stays ready when a refresh fails', async () => {
@@ -101,10 +101,10 @@ it('keeps cached data and stays ready when a refresh fails', async () => {
 
     await expect(resource.refresh()).rejects.toThrow('boom')
 
-    expect(resource.status.value).toEqual('ready')
-    expect(resource.data.value).toEqual('cached')
-    expect(resource.error.value?.message).toEqual('boom')
-    expect(resource.isRefreshing.value).toBeFalse()
+    expect(resource.status).toEqual('ready')
+    expect(resource.data).toEqual('cached')
+    expect(resource.error?.message).toEqual('boom')
+    expect(resource.isRefreshing).toBeFalse()
 })
 
 it('clears error after a successful refresh', async () => {
@@ -118,8 +118,8 @@ it('clears error after a successful refresh', async () => {
 
     await resource.refresh()
 
-    expect(resource.error.value).toBeNull()
-    expect(resource.status.value).toEqual('ready')
+    expect(resource.error).toBeNull()
+    expect(resource.status).toEqual('ready')
 })
 
 it('whenReady returns stale data immediately and refreshes in background', async () => {
@@ -130,7 +130,7 @@ it('whenReady returns stale data immediately and refreshes in background', async
     }, { ttlSecs: 0 })
     await resource.whenReady()
     const statuses: string[] = []
-    resource.status.subscribe({}, (s) => statuses.push(s))
+    resource.status$.subscribe({}, (s) => statuses.push(s))
 
     const value = await resource.whenReady()
 
@@ -145,10 +145,10 @@ it('reset returns the resource to uninitialized state', async () => {
 
     resource.reset()
 
-    expect(resource.status.value).toEqual('uninitialized')
-    expect(resource.data.value).toBeUndefined()
-    expect(resource.error.value).toBeNull()
-    expect(resource.isRefreshing.value).toBeFalse()
+    expect(resource.status).toEqual('uninitialized')
+    expect(resource.data).toBeUndefined()
+    expect(resource.error).toBeNull()
+    expect(resource.isRefreshing).toBeFalse()
 })
 
 it('ignores in-flight result if reset was called', async () => {
@@ -160,15 +160,15 @@ it('ignores in-flight result if reset was called', async () => {
     resolve('late value')
     await promise
 
-    expect(resource.data.value).toBeUndefined()
-    expect(resource.status.value).toEqual('uninitialized')
-    expect(resource.isRefreshing.value).toBeFalse()
+    expect(resource.data).toBeUndefined()
+    expect(resource.status).toEqual('uninitialized')
+    expect(resource.isRefreshing).toBeFalse()
 })
 
 it('notifies data observers when the value loads', async () => {
     const received: (string | undefined)[] = []
     const resource = observableResource(async () => 'hello')
-    resource.data.subscribe({}, (v) => received.push(v))
+    resource.data$.subscribe({}, (v) => received.push(v))
 
     await resource.whenReady()
 
@@ -185,7 +185,7 @@ it('eager option triggers the fetch on construction', async () => {
     await resource.whenReady()
 
     expect(fetchCalls).toEqual(1)
-    expect(resource.status.value).toEqual('ready')
+    expect(resource.status).toEqual('ready')
 })
 
 it('concurrent whenReady calls share the same fetch', async () => {
@@ -198,4 +198,15 @@ it('concurrent whenReady calls share the same fetch', async () => {
     await Promise.all([resource.whenReady(), resource.whenReady(), resource.whenReady()])
 
     expect(fetchCalls).toEqual(1)
+})
+
+it('data$ and data are kept in sync', async () => {
+    const resource = observableResource(async () => 'hello')
+
+    await resource.whenReady()
+
+    expect(resource.data).toEqual(resource.data$.value)
+    expect(resource.status).toEqual(resource.status$.value)
+    expect(resource.error).toEqual(resource.error$.value)
+    expect(resource.isRefreshing).toEqual(resource.isRefreshing$.value)
 })

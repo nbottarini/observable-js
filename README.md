@@ -107,6 +107,8 @@ const tenfold$ = value$.map(v => v * 10)
 
 An asynchronous value with a lifecycle. Useful for anything that requires a fetch step before being available — remote data, IndexedDB, heavy local computation, anything async.
 
+Each piece of state is exposed twice: a `$`-suffixed reactive view (`ObservableValue`) for subscribing or chaining, and a plain synchronous getter for reading the current value. They are always in sync — `resource.data === resource.data$.value`.
+
 ```typescript
 import { observableResource } from '@nbottarini/observable'
 
@@ -116,12 +118,16 @@ const profile = observableResource(async () => {
 })
 
 await profile.whenReady()      // triggers the fetch on first call
-profile.data.value             // current value
-profile.status.value           // 'uninitialized' | 'loading' | 'ready' | 'error'
-profile.error.value            // last fetch error, if any
-profile.isRefreshing.value     // true while a background refresh is in flight
 
-profile.data.subscribe(this, (value) => { /* react to changes */ })
+// Sync reads
+profile.data                   // current value
+profile.status                 // 'uninitialized' | 'loading' | 'ready' | 'error'
+profile.error                  // last fetch error, if any
+profile.isRefreshing           // true while a background refresh is in flight
+
+// Reactive views (subscribe / chain)
+profile.data$.subscribe(this, (value) => { /* react to data changes */ })
+profile.status$.subscribe(this, (status) => { /* react to status changes */ })
 
 await profile.refresh()        // forces a new fetch
 profile.reset()                // back to uninitialized, drops cached value
@@ -138,7 +144,7 @@ If a background refresh fails, `error` is populated but `status` remains `ready`
 await profile.whenReady()
 
 // Refresh: status stays ready; isRefreshing flips true → false
-profile.isRefreshing.subscribe(this, (refreshing) => {
+profile.isRefreshing$.subscribe(this, (refreshing) => {
     showSpinner(refreshing)  // small indicator, data stays visible
 })
 await profile.refresh()
@@ -163,14 +169,14 @@ const userName = profile.map(p => p?.name)        // ObservableResource<string>
 const isAdult = profile.map(p => p ? p.age >= 18 : undefined)
 
 await profile.whenReady()
-userName.data.value  // 'Jorge'
+userName.data  // 'Jorge'
 ```
 
 ### Composing data with observable values
 
-If you only need a derived value (without the resource lifecycle), use `data.map()` to get a plain `ObservableValue`:
+If you only need a derived value (without the resource lifecycle), use `data$.map()` to get a plain `ObservableValue`:
 
 ```typescript
-const isLoading$ = profile.status.map(s => s === 'loading')
-const userName$ = profile.data.map(p => p?.name ?? '')
+const isLoading$ = profile.status$.map(s => s === 'loading')
+const userName$ = profile.data$.map(p => p?.name ?? '')
 ```

@@ -17,10 +17,10 @@ const DEFAULT_TTL_SECS = 60
  * generation counter.
  */
 export class DefaultObservableResource<T> implements ObservableResource<T> {
-    private readonly _data: MutableObservableValue<T | undefined> = observableValue<T | undefined>(undefined)
-    private readonly _status: MutableObservableValue<ResourceStatus> = observableValue<ResourceStatus>('uninitialized')
-    private readonly _error: MutableObservableValue<Error | null> = observableValue<Error | null>(null)
-    private readonly _isRefreshing: MutableObservableValue<boolean> = observableValue(false)
+    private readonly _data$: MutableObservableValue<T | undefined> = observableValue<T | undefined>(undefined)
+    private readonly _status$: MutableObservableValue<ResourceStatus> = observableValue<ResourceStatus>('uninitialized')
+    private readonly _error$: MutableObservableValue<Error | null> = observableValue<Error | null>(null)
+    private readonly _isRefreshing$: MutableObservableValue<boolean> = observableValue(false)
     private readonly ttlSecs: number
     private lastFetchedAtMs: number | null = null
     private fetching: Promise<void> | null = null
@@ -31,40 +31,42 @@ export class DefaultObservableResource<T> implements ObservableResource<T> {
         if (options.eager) void this.load()
     }
 
-    get data(): ObservableValue<T | undefined> { return this._data }
+    get data$(): ObservableValue<T | undefined> { return this._data$ }
+    get status$(): ObservableValue<ResourceStatus> { return this._status$ }
+    get error$(): ObservableValue<Error | null> { return this._error$ }
+    get isRefreshing$(): ObservableValue<boolean> { return this._isRefreshing$ }
 
-    get status(): ObservableValue<ResourceStatus> { return this._status }
-
-    get error(): ObservableValue<Error | null> { return this._error }
-
-    get isRefreshing(): ObservableValue<boolean> { return this._isRefreshing }
+    get data(): T | undefined { return this._data$.value }
+    get status(): ResourceStatus { return this._status$.value }
+    get error(): Error | null { return this._error$.value }
+    get isRefreshing(): boolean { return this._isRefreshing$.value }
 
     async whenReady(): Promise<T> {
-        if (this._status.value === 'ready') {
+        if (this._status$.value === 'ready') {
             // Stale data: trigger a background refresh, but return current value immediately
             if (!this.isFresh() && !this.fetching) void this.load(true)
-            return this._data.value as T
+            return this._data$.value as T
         }
 
         await this.load()
 
-        if (this._status.value === 'error') throw this._error.value
-        return this._data.value as T
+        if (this._status$.value === 'error') throw this._error$.value
+        return this._data$.value as T
     }
 
     async refresh(): Promise<void> {
         const startGeneration = this.generation
         await this.load(true)
         if (this.generation !== startGeneration) return
-        if (this._error.value) throw this._error.value
+        if (this._error$.value) throw this._error$.value
     }
 
     reset() {
         this.generation++
-        this._data.value = undefined
-        this._error.value = null
-        this._status.value = 'uninitialized'
-        this._isRefreshing.value = false
+        this._data$.value = undefined
+        this._error$.value = null
+        this._status$.value = 'uninitialized'
+        this._isRefreshing$.value = false
         this.lastFetchedAtMs = null
         this.fetching = null
     }
@@ -75,36 +77,36 @@ export class DefaultObservableResource<T> implements ObservableResource<T> {
 
     private async load(force = false): Promise<void> {
         if (this.fetching) return this.fetching
-        if (!force && this._status.value === 'ready' && this.isFresh()) return
+        if (!force && this._status$.value === 'ready' && this.isFresh()) return
 
         const startGeneration = this.generation
-        const hasData = this._data.value !== undefined
+        const hasData = this._data$.value !== undefined
 
         // Stale-while-revalidate: only show 'loading' when we have no data to display
         if (hasData) {
-            this._isRefreshing.value = true
+            this._isRefreshing$.value = true
         } else {
-            this._status.value = 'loading'
+            this._status$.value = 'loading'
         }
-        this._error.value = null
+        this._error$.value = null
 
         this.fetching = (async () => {
             try {
                 const value = await this.fetchFunc()
                 if (this.generation !== startGeneration) return
 
-                this._data.value = value
+                this._data$.value = value
                 this.lastFetchedAtMs = Date.now()
-                this._status.value = 'ready'
+                this._status$.value = 'ready'
             } catch (e) {
                 if (this.generation !== startGeneration) return
 
-                this._error.value = e instanceof Error ? e : new Error(String(e))
+                this._error$.value = e instanceof Error ? e : new Error(String(e))
                 // Only flip to 'error' when there is no cached data to keep showing
-                if (!hasData) this._status.value = 'error'
+                if (!hasData) this._status$.value = 'error'
             } finally {
                 if (this.generation === startGeneration) {
-                    this._isRefreshing.value = false
+                    this._isRefreshing$.value = false
                     this.fetching = null
                 }
             }

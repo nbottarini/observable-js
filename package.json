@@ -1,6 +1,6 @@
 {
   "name": "@nbottarini/observable",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "description": "Tiny Observable pattern implementation for creating observable properties",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
