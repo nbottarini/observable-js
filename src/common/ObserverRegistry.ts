@@ -1,16 +1,17 @@
-import { Observable, ObserverFunc } from './Observable'
+import { ObserverFunc } from './ObserverFunc'
 
-export class DefaultObservable<T = void> implements Observable<T> {
+/**
+ * Internal helper that holds a list of observers indexed by their owner object
+ * and notifies them in parallel. Used by composition by the public observable
+ * implementations so they don't have to reimplement subscribe/unsubscribe logic.
+ */
+export class ObserverRegistry<T> {
     private observers: Set<object> = new Set()
     private handlers: Map<object, ObserverFunc<T>> = new Map()
 
     subscribe(observer: object, handler: ObserverFunc<T>) {
         this.observers.add(observer)
         this.handlers.set(observer, handler.bind(observer))
-    }
-
-    hasObserver(observer: object) {
-        return this.observers.has(observer)
     }
 
     unsubscribe(observer: object) {
@@ -23,15 +24,23 @@ export class DefaultObservable<T = void> implements Observable<T> {
         this.handlers.clear()
     }
 
-    async notify(value?: T) {
-        let promises = []
+    hasObserver(observer: object): boolean {
+        return this.observers.has(observer)
+    }
+
+    get size(): number {
+        return this.observers.size
+    }
+
+    isEmpty(): boolean {
+        return this.observers.size === 0
+    }
+
+    async notifyAll(value: T): Promise<void> {
+        const promises = []
         for (const handler of this.handlers.values()) {
             promises.push(handler(value))
         }
         await Promise.all(promises)
     }
-}
-
-export function observable<T = void>(): Observable<T> {
-    return new DefaultObservable<T>()
 }
