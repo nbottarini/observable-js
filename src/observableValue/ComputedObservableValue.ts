@@ -10,9 +10,17 @@ type DepValues<Deps extends readonly ObservableValue<any>[]> = { [K in keyof Dep
  * observable values via a compute function. Recomputes and notifies whenever
  * any dependency changes.
  *
- * Lazy: only watches its dependencies while it has at least one observer of
- * its own. While observed, the computed value is cached; without observers,
- * the cache is invalidated and `.value` recomputes on every read.
+ * Lazy: only watches its dependencies (via subscriptions) while it has at
+ * least one observer of its own. Without observers it is not notified of
+ * dep changes — but on every `.value` read it captures the current dep
+ * values and compares them with those used in the last computation. If
+ * unchanged, it returns the cached result; if changed, it recomputes and
+ * updates the cache.
+ *
+ * The dep-equality check keeps the returned reference stable across reads
+ * when nothing has changed, which matters for callers that use `Object.is`
+ * to detect changes (e.g. when the compute function returns a fresh array
+ * or object on every call).
  */
 export class ComputedObservableValue<Deps extends readonly ObservableValue<any>[], T> implements ObservableValue<T> {
     private registry: ObserverRegistry<T> = new ObserverRegistry()
@@ -20,6 +28,7 @@ export class ComputedObservableValue<Deps extends readonly ObservableValue<any>[
     private readonly onDepChangedRef = this.onDepChanged.bind(this)
     private hasCachedValue = false
     private cachedValue!: T
+    private lastDepValues?: DepValues<Deps>
 
     constructor(
         private readonly computeFunc: (...values: DepValues<Deps>) => T,
@@ -29,14 +38,11 @@ export class ComputedObservableValue<Deps extends readonly ObservableValue<any>[
     }
 
     get value(): T {
-        // Without observers we don't watch deps so we recompute on every read
-        if (this.registry.isEmpty()) return this.compute()
-
-        if (!this.hasCachedValue) {
-            this.cachedValue = this.compute()
-            this.hasCachedValue = true
+        const currentDepValues = this.readDepValues()
+        if (this.hasCachedValue && this.depsEqual(currentDepValues)) {
+            return this.cachedValue
         }
-        return this.cachedValue
+        return this.recomputeAndCache(currentDepValues)
     }
 
     subscribe(observer: object, handler: ObserverFunc<T>) {
@@ -48,19 +54,13 @@ export class ComputedObservableValue<Deps extends readonly ObservableValue<any>[
     unsubscribe(observer: object) {
         const hadObservers = !this.registry.isEmpty()
         this.registry.unsubscribe(observer)
-        if (hadObservers && this.registry.isEmpty()) {
-            this.detachFromDeps()
-            this.invalidateCache()
-        }
+        if (hadObservers && this.registry.isEmpty()) this.detachFromDeps()
     }
 
     unsubscribeAll() {
         const hadObservers = !this.registry.isEmpty()
         this.registry.unsubscribeAll()
-        if (hadObservers) {
-            this.detachFromDeps()
-            this.invalidateCache()
-        }
+        if (hadObservers) this.detachFromDeps()
     }
 
     hasObserver(observer: object): boolean {
@@ -83,23 +83,36 @@ export class ComputedObservableValue<Deps extends readonly ObservableValue<any>[
         }
     }
 
-    private compute(): T {
-        const values = this.deps.map(d => d.value) as unknown as DepValues<Deps>
-        return this.computeFunc(...values)
+    private readDepValues(): DepValues<Deps> {
+        return this.deps.map(d => d.value) as unknown as DepValues<Deps>
+    }
+
+    private recomputeAndCache(depValues: DepValues<Deps>): T {
+        this.cachedValue = this.computeFunc(...depValues)
+        this.lastDepValues = depValues
+        this.hasCachedValue = true
+        return this.cachedValue
+    }
+
+    private depsEqual(current: DepValues<Deps>): boolean {
+        if (!this.lastDepValues) return false
+        if (this.lastDepValues.length !== current.length) return false
+        for (let i = 0; i < current.length; i++) {
+            if (!Object.is(this.lastDepValues[i], current[i])) return false
+        }
+        return true
     }
 
     private async onDepChanged(): Promise<void> {
-        const newValue = this.compute()
-        if (this.hasCachedValue && Object.is(this.cachedValue, newValue)) return
+        const currentDepValues = this.readDepValues()
+        if (this.hasCachedValue && this.depsEqual(currentDepValues)) return
 
-        this.cachedValue = newValue
-        this.hasCachedValue = true
+        const previousValue = this.cachedValue
+        const hadCache = this.hasCachedValue
+        this.recomputeAndCache(currentDepValues)
+        if (hadCache && Object.is(previousValue, this.cachedValue)) return
+
         await this.registry.notifyAll(this.cachedValue)
-    }
-
-    private invalidateCache() {
-        this.hasCachedValue = false
-        this.cachedValue = undefined as T
     }
 }
 

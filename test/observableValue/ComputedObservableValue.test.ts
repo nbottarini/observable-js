@@ -29,7 +29,7 @@ it('notifies observers when a dependency changes', () => {
     expect(notifiedValue).toEqual('new value')
 })
 
-it('recomputes on every read when there are no observers', () => {
+it('does not recompute on read when dependencies have not changed', () => {
     const property1$ = observableValue(1)
     const property2$ = observableValue(2)
     let computeCalls = 0
@@ -41,7 +41,34 @@ it('recomputes on every read when there are no observers', () => {
     void computed$.value
     void computed$.value
 
+    expect(computeCalls).toEqual(1)
+})
+
+it('recomputes on read when a dependency changed while not observed', () => {
+    const property1$ = observableValue(1)
+    const property2$ = observableValue(2)
+    let computeCalls = 0
+    const computed$ = observableComputed((a, b) => {
+        computeCalls++
+        return a + b
+    }, property1$, property2$)
+    void computed$.value
+
+    property1$.value = 10
+    const value = computed$.value
+
     expect(computeCalls).toEqual(2)
+    expect(value).toEqual(12)
+})
+
+it('returns the same reference across reads when dependencies are stable', () => {
+    const property$ = observableValue(new Map([['a', 1]]))
+    const computed$ = observableComputed(m => Array.from(m.values()), property$)
+
+    const first = computed$.value
+    const second = computed$.value
+
+    expect(second).toBe(first)
 })
 
 it('caches the value while there are observers', () => {
@@ -103,7 +130,7 @@ it('unsubscribe stops notifications for that observer only', () => {
     expect(received).toEqual(['o2:new'])
 })
 
-it('invalidates cached value when the last observer unsubscribes', () => {
+it('reflects a dependency change that happened while not observed', () => {
     const property$ = observableValue<number | undefined>(undefined)
     const computed$ = observableComputed((v) => v, property$)
     const observer = {}
